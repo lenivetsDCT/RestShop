@@ -1,0 +1,35 @@
+### MYSQL
+CREATE USER 'rest'@'localhost' IDENTIFIED BY '1234';
+GRANT ALL PRIVILEGES ON RestAPI.* TO 'rest'@'localhost';
+FLUSH PRIVILEGES;
+### MYSQL END
+
+#Create user
+http --form POST 127.0.0.1:8000/account/ username=test email=some@good.mail password=1234
+
+#Auth user
+http --json POST http://127.0.0.1:8000/api-token-auth/ username=test password=1234
+###SAVE TOKEN FROM RESULT
+#Replace {token} with Token from last request (no sessions) {token}
+
+#Add movie
+http --json POST http://127.0.0.1:8000/movie/ name="Tile3" desc="Some fat movie desc" stock=2 price="8.00" "Authorization: Token {token}"
+
+#get all movie list
+http --json GET http://127.0.0.1:8000/movie/ "Authorization: Token {token}"
+
+#get movie list with filter (search), query - hold description filter or name filter.
+http --json GET http://127.0.0.1:8000/movie/?query=bad "Authorization: Token {token}"
+
+#get all carts (only current user)
+http --json GET http://127.0.0.1:8000/cart/ "Authorization: Token {token}"
+
+#Take movie for rent (place movie to rent cart), items - hold hyperlink to movie item. "Out of stock" can be returned.
+http -f POST http://127.0.0.1:8000/cart/ comment="Hello" items="http://localhost:8000/movie/1/" items="http://127.0.0.1:8000/movie/2/" "Authorization: Token {token}"
+### Will return Cart ID and all info. Change card id bottom.
+
+#Return or change rent cart, if item removed from old list it will return +1 to stock
+http -f PUT http://127.0.0.1:8000/cart/1/ items="http://localhost:8000/movie/2/" items="http://127.0.0.1:8000/movie/3/" "Authorization: Token {token}"
+
+#Just return item from rent cart, stock +1. *retrun* - variable hold Movie name not hyperlink.
+http -f DELETE http://127.0.0.1:8000/cart/1/ return="Tile2" "Authorization: Token {token}"
